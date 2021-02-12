@@ -1,0 +1,53 @@
+---
+- name: test connectivity
+  hosts: all
+  tasks:
+    - name: ping
+      ping:
+    - name: change default gateway address
+      replace:
+        path: /etc/network/interfaces
+        regexp: '(up route add default gw [\d]*\.[\d]*.[\d]*)\.[\d]*$'
+        replace: '\1.[digit]'
+        backup: yes
+      register: debianresult
+      when: (ansible_facts['distribution'] == "Debian")
+    - debug:
+        msg: " On this server {{debianresult}}"
+    - name: restart networking service
+      service:
+        name: networking
+        state: restarted
+      when: (ansible_facts['distribution'] == "Debian")
+    - name: change default gateway address on Redhat
+      replace:
+        path: /etc/sysconfig/network-scripts/ifcfg-eth0
+        regexp: '(GATEWAY=[\d]*\.[\d]*.[\d]*)\.[\d]*$'
+        replace: '\1.[digit]'
+        backup: yes
+      when: (ansible_facts['distribution'] == "RedHat")
+      register: redhatresult
+    - debug:
+        msg: "On this server {{redhatresult}}"
+    - name: restart networking service for Redhat
+      service:
+        name: network
+        state: restarted
+      when: (ansible_facts['distribution'] == "RedHat")
+    - name: log the changed hosts
+      local_action:
+        module: lineinfile
+        line: "{{item}}"
+        dest: /tmp/changed_logs_test.log
+      with_items:
+        - "{{ansible_facts.hostname}}{{debianresult}}"
+      when: debianresult.changed
+    - name: log the changed hosts
+      local_action:
+        module: lineinfile
+        line: "{{item}}"
+        dest: /tmp/changed_logs_test.log
+      with_items:
+        - "{{ansible_facts.hostname}}{{redhatresult}}"
+      when: redhatresult.changed
+...
