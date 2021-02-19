@@ -10,7 +10,7 @@
         line: "{{ansible_facts.hostname}}"
         create: yes
         state: present
-      when: "{{ansible_facts.default_ipv4.gateway.split('.')[-1]}} != 254"
+      when: "{{ansible_facts.default_ipv4.gateway.split('.')[-1]}} != [digit]"
       delegate_to: localhost
     - name: "Remove hostname from log"
       ansible.builtin.lineinfile:
@@ -18,6 +18,6 @@
         line: "{{ansible_facts.hostname}}"
         create: yes
         state: absent
-      when: "{{ansible_facts.default_ipv4.gateway.split('.')[-1]}} == 254"
+      when: "{{ansible_facts.default_ipv4.gateway.split('.')[-1]}} == [digit]"
       delegate_to: localhost
 ...
