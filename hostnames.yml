@@ -1,0 +1,23 @@
+---
+
+- name: "Check"
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: "Add hostname to log"
+      ansible.builtin.lineinfile:
+        path: "gateway-{{ansible_facts.distribution}}.txt"
+        line: "{{ansible_facts.hostname}}"
+        create: yes
+        state: present
+      when: "{{ansible_facts.default_ipv4.gateway.split('.')[-1]}} != 254"
+      delegate_to: localhost
+    - name: "Remove hostname from log"
+      ansible.builtin.lineinfile:
+        path: "gateway-{{ansible_facts.distribution}}.txt"
+        line: "{{ansible_facts.hostname}}"
+        create: yes
+        state: absent
+      when: "{{ansible_facts.default_ipv4.gateway.split('.')[-1]}} == 254"
+      delegate_to: localhost
+...
